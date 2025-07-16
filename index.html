@@ -1,67 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keeper One - الترتيب</title>
-  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-database-compat.js"></script>
+  <title>ترتيب الحراس - Keeper One</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 30px; background: #f9f9f9; }
-    h1 { margin-bottom: 10px; }
-    input { padding: 10px; font-size: 16px; margin-bottom: 20px; width: 60%; max-width: 300px; }
-    table { margin: 0 auto; border-collapse: collapse; width: 90%; max-width: 600px; }
-    th, td { border: 1px solid #ccc; padding: 10px; }
-    th { background: #0077cc; color: white; }
-    tr.highlight { background: #d0ebff; font-weight: bold; }
+    body { font-family: sans-serif; direction: rtl; padding: 20px; background: #f4f4f4; }
+    h1 { text-align: center; color: #333; }
+    table { margin: auto; border-collapse: collapse; background: white; box-shadow: 0 0 10px #ccc; }
+    th, td { padding: 12px 20px; border: 1px solid #ccc; text-align: center; }
+    th { background-color: #222; color: white; }
+    td:nth-child(2) { color: green; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>🏆 ترتيب الحراس - Keeper One</h1>
-  <p>أدخل اسمك لمشاهدة ترتيبك:</p>
-  <input type="text" id="nameInput" placeholder="اسم الحارس" oninput="highlightSelf()">
-  <table id="leaderboard">
+  <h1>🔥 ترتيب الحراس الأكثر تصديًا 🔥</h1>
+  <table id="keepersTable">
     <thead>
-      <tr><th>الترتيب</th><th>الحارس</th><th>عدد التصديات</th></tr>
+      <tr>
+        <th>اسم الحارس</th>
+        <th>عدد التصديات</th>
+      </tr>
     </thead>
     <tbody></tbody>
   </table>
 
-<script>
-  const firebaseConfig = {
-    databaseURL: "https://keeper1-8d487-default-rtdb.europe-west1.firebasedatabase.app/"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  function loadLeaderboard() {
-    db.ref("keepers").once("value", snapshot => {
-      const data = snapshot.val();
-      const rows = [];
-      for (let name in data) {
-        rows.push({ name, saves: data[name].saves });
-      }
-      rows.sort((a, b) => b.saves - a.saves);
-      const tbody = document.querySelector("#leaderboard tbody");
-      tbody.innerHTML = "";
-      rows.forEach((item, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${index + 1}</td><td>${item.name}</td><td>${item.saves}</td>`;
-        tbody.appendChild(tr);
+  <script>
+    fetch("https://keeper1-8d487-default-rtdb.europe-west1.firebasedatabase.app/keepers.json")
+      .then(res => res.json())
+      .then(data => {
+        const table = document.querySelector("#keepersTable tbody");
+        const sorted = Object.entries(data).sort((a,b)=>b[1].saves - a[1].saves);
+        sorted.forEach(([name, info]) => {
+          const row = `<tr><td>${decodeURIComponent(name)}</td><td>${info.saves}</td></tr>`;
+          table.innerHTML += row;
+        });
+      })
+      .catch(err => {
+        document.body.innerHTML += "<p style='color:red;text-align:center;'>فشل تحميل البيانات ❌</p>";
+        console.error(err);
       });
-      highlightSelf();
-    });
-  }
-
-  function highlightSelf() {
-    const input = document.getElementById("nameInput").value.trim().toLowerCase();
-    document.querySelectorAll("#leaderboard tbody tr").forEach(row => {
-      const name = row.children[1].innerText.trim().toLowerCase();
-      row.classList.toggle("highlight", name === input);
-    });
-  }
-
-  loadLeaderboard();
-</script>
+  </script>
 </body>
 </html>
+
