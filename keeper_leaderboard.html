@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keeper One - الترتيب</title>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 30px; background: #f9f9f9; }
+    h1 { margin-bottom: 10px; }
+    input { padding: 10px; font-size: 16px; margin-bottom: 20px; width: 60%; max-width: 300px; }
+    table { margin: 0 auto; border-collapse: collapse; width: 90%; max-width: 600px; }
+    th, td { border: 1px solid #ccc; padding: 10px; }
+    th { background: #0077cc; color: white; }
+    tr.highlight { background: #d0ebff; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>🏆 ترتيب الحراس - Keeper One</h1>
+  <p>أدخل اسمك لمشاهدة ترتيبك:</p>
+  <input type="text" id="nameInput" placeholder="اسم الحارس" oninput="highlightSelf()">
+  <table id="leaderboard">
+    <thead>
+      <tr><th>الترتيب</th><th>الحارس</th><th>عدد التصديات</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+  const firebaseConfig = {
+    databaseURL: "https://keeper1-8d487-default-rtdb.europe-west1.firebasedatabase.app/"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function loadLeaderboard() {
+    db.ref("keepers").once("value", snapshot => {
+      const data = snapshot.val();
+      const rows = [];
+      for (let name in data) {
+        rows.push({ name, saves: data[name].saves });
+      }
+      rows.sort((a, b) => b.saves - a.saves);
+      const tbody = document.querySelector("#leaderboard tbody");
+      tbody.innerHTML = "";
+      rows.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${index + 1}</td><td>${item.name}</td><td>${item.saves}</td>`;
+        tbody.appendChild(tr);
+      });
+      highlightSelf();
+    });
+  }
+
+  function highlightSelf() {
+    const input = document.getElementById("nameInput").value.trim().toLowerCase();
+    document.querySelectorAll("#leaderboard tbody tr").forEach(row => {
+      const name = row.children[1].innerText.trim().toLowerCase();
+      row.classList.toggle("highlight", name === input);
+    });
+  }
+
+  loadLeaderboard();
+</script>
+</body>
+</html>
